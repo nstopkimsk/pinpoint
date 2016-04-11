@@ -48,7 +48,6 @@
 	            replace: true,
 	            templateUrl: 'features/serverMap/serverMap.html?v=' + G_BUILD_TIME,
 	            link: function postLink(scope, element, attrs) {
-	
 	                // define private variables
 	                var bUseNodeContextMenu, bUseLinkContextMenu, htLastQuery,
 	                    bUseBackgroundContextMenu, oServerMap, oAlertService, oProgressBarService, htLastMapData, htLastLink, htLastNode,
@@ -354,7 +353,7 @@
 	                        sLastSelection = 'node';
 	                        htLastNode = node;
 	                        scope.$emit("serverMapDirective.nodeClicked", e, htLastQuery, node, htLastMergedMapData, searchQuery);
-							if ( scope.oNavbarVoService && scope.oNavbarVoService.getPeriodType() === "realtime" ) {
+							if ( scope.oNavbarVoService && scope.oNavbarVoService.isRealtime() ) {
 								$rootScope.$broadcast("realtimeChartController.initialize", node.isWas, node.applicationName, scope.oNavbarVoService.getApplication() + "/" + scope.oNavbarVoService.getReadablePeriod() + "/" + scope.oNavbarVoService.getQueryEndDateTime() + "/" + scope.oNavbarVoService.getCallerRange());
 							}
 	                        reset();
@@ -363,7 +362,7 @@
 	                    	e.diagram.zoomToRect( node.actualBounds, 1.2);
 	                    };
 	                    options.fOnNodeContextClicked = function (e, node) {
-							if ( scope.oNavbarVoService.getPeriodType() === "realtime" ) {
+							if ( scope.oNavbarVoService.isRealtime() ) {
 								return;
 							}
 	                        reset();

@@ -35,12 +35,6 @@
 	
 	                var applicationResource;
 
-					var setDepthToStorage = function(app, depth) {
-	                	if (angular.isUndefined(app) || app === null || angular.isUndefined(depth) || depth === null) {
-	                		return;
-	                	}
-	                	webStorage.add(app, depth);
-	                };
 	                scope.showNavbar = false;
 	                scope.periodDelay = false;
 	                scope.aReadablePeriodList = preferenceService.getPeriodTypes();
@@ -65,8 +59,8 @@
 	                        label: '1 minute'
 	                    }
 	                ];
-					scope.callee = prevCallee = preferenceService.getCalleeFromStorage( scope.application );
-	                scope.caller = prevCaller = preferenceService.getCallerFromStorage( scope.application );
+					scope.callee = prevCallee = preferenceService.getCalleeByApp( scope.application );
+	                scope.caller = prevCaller = preferenceService.getCallerByApp( scope.application );
 	                scope.rangeList = preferenceService.getDepthList();
 	                scope.applications = [
 	                    {
@@ -119,10 +113,10 @@
 	                        }
 	                    ];
 	                    scope.application = oNavbarVoService.getApplication() || "";
-						if ( scope.application !== "" ) {
-							scope.callee = prevCallee = preferenceService.getCalleeFromStorage( scope.application );
-							scope.caller = prevCaller = preferenceService.getCallerFromStorage( scope.application );
-						}
+						// if ( scope.application !== "" ) {
+							scope.callee = prevCallee = preferenceService.getCalleeByApp( scope.application );
+							scope.caller = prevCaller = preferenceService.getCallerByApp( scope.application );
+						// }
 	                    scope.disableApplication = true;
 	                    scope.readablePeriod = oNavbarVoService.getReadablePeriod() || preferenceService.getPeriod();
 						scope.periodCalendar = oNavbarVoService.getReadablePeriod() || preferenceService.getPeriod();
@@ -299,8 +293,8 @@
 	                    }
 	                    oNavbarVoService.setApplication(scope.application);
 
-						scope.callee = preferenceService.getCalleeFromStorage(scope.application);
-	                    scope.caller = preferenceService.getCallerFromStorage(scope.application);
+						scope.callee = prevCallee = preferenceService.getCalleeByApp(scope.application);
+	                    scope.caller = prevCaller = preferenceService.getCallerByApp(scope.application);
 
 						oNavbarVoService.setCalleeRange( scope.callee );
 	                    oNavbarVoService.setCallerRange( scope.caller );
@@ -308,6 +302,7 @@
 	                    if (scope.periodType === cfg.periodType.LAST && scope.readablePeriod) {
 							oNavbarVoService.setPeriodType( cfg.periodType.LAST );
 							getQueryEndTimeFromServer(function (currentServerTime) {
+								// currentServerTime -= 3000;
 								oNavbarVoService.setReadablePeriod(scope.readablePeriod);
 								oNavbarVoService.setQueryEndDateTime(moment(currentServerTime).format('YYYY-MM-DD-HH-mm-ss'));
 								oNavbarVoService.autoCalculateByQueryEndDateTimeAndReadablePeriod();
@@ -338,9 +333,9 @@
 	                 * emit as changed
 	                 */
 	                emitAsChanged = function () {
+						$rootScope.$broadcast( "realtimeChartController.close" );
 	                    setPeriodTypeAsCurrent();
-	                    scope.$emit('navbarDirective.changed', oNavbarVoService);
-	                    $rootScope.$broadcast("realtimeChartController.close");
+	                    scope.$emit( "navbarDirective.changed", oNavbarVoService );
 	                };
 	
 	                /**
@@ -578,6 +573,9 @@
 	                scope.showUpdate = function () {
 	                    return scope.periodType === cfg.periodType.LAST && (_.indexOf(['5m', '20m', '1h', '3h'], scope.readablePeriod) >= 0) && scope.application ? true : false;
 	                };
+					scope.changeUpdateSetting = function() {
+						analyticsService.send(analyticsService.CONST.MAIN, scope.autoUpdate ? analyticsService.CONST.TG_UPDATE_OFF : analyticsService.CONST.TG_UPDATE_ON );
+					};
 	
 	                /**
 	                 * start update
@@ -629,11 +627,11 @@
 							analyticsService.send(analyticsService.CONST.MAIN, analyticsService.CONST.CLK_CALLER_RANGE, scope.caller);
 							prevCallee = scope.callee;
 							prevCaller = scope.caller;
-							setDepthToStorage( scope.application + "+callee", scope.callee );
-							setDepthToStorage( scope.application + "+caller", scope.caller );
+							preferenceService.setDepthByApp( scope.application + "+callee", scope.callee );
+							preferenceService.setDepthByApp( scope.application + "+caller", scope.caller );
 
-							$route.reload();
-							//broadcast();
+							window.location.reload(true);
+							// broadcast();
 						}
 					};
 					scope.cancelDepth = function( bHide ) {
@@ -675,6 +673,7 @@
 	                    scope.autoUpdate = false;
 	                };
 					scope.setRealtime = function () {
+						if ( scope.periodType === cfg.periodType.REALTIME ) return;
 						analyticsService.send( analyticsService.CONST.MAIN, analyticsService.CONST.CLK_START_REALTIME );
 						scope.periodType = cfg.periodType.REALTIME;
 						scope.autoUpdate = false;
@@ -693,7 +692,6 @@
 	                 */
 	                scope.$watch('autoUpdate', function (newVal, oldVal) {
 	                    if (newVal) {
-	                    	analyticsService.send(analyticsService.CONST.MAIN, analyticsService.CONST.TG_UPDATE_ON);
 	                        $timeout(startUpdate, 1000);
 	                    } else {
 	                        resetTimeLeft();

@@ -63,8 +63,6 @@
                     'NGINX_GROUP': 'NGINX.png',
                     'ORACLE': 'ORACLE.png',
                     'ORACLE_GROUP': 'ORACLE.png',
-                    'CASSANDRA': 'CASSANDRA.png',
-                    'CASSANDRA_GROUP': 'CASSANDRA.png',
                     'QUEUE': 'QUEUE.png',
                     'QUEUE_GROUP': 'QUEUE.png',
                     'STAND_ALONE': 'STAND_ALONE.png',
@@ -1286,7 +1284,9 @@
                 htData = node.data,
                 fOnNodeClicked = this.option('fOnNodeClicked');
             if (angular.isFunction(fOnNodeClicked)) {
-            	this.analyticsService.send(this.analyticsService.CONST.MAIN, this.analyticsService.CONST.CLK_NODE);
+				if ( e.clickCount > 0 ) {
+					this.analyticsService.send(this.analyticsService.CONST.MAIN, this.analyticsService.CONST.CLK_NODE);
+				}
                 fOnNodeClicked.call(this, e, htData, unknownKey, query);
             }
         },

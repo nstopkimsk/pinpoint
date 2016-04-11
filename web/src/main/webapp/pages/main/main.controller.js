@@ -38,13 +38,13 @@
 	            if ($routeParams.queryEndDateTime) {
 	                oNavbarVoService.setQueryEndDateTime($routeParams.queryEndDateTime);
 	            }
-				oNavbarVoService.setCalleeRange( preferenceService.getCalleeFromStorage($routeParams.application) );
-				oNavbarVoService.setCallerRange( preferenceService.getCallerFromStorage($routeParams.application) );
+				oNavbarVoService.setCalleeRange( preferenceService.getCalleeByApp($routeParams.application) );
+				oNavbarVoService.setCallerRange( preferenceService.getCallerByApp($routeParams.application) );
 
 				if ( oNavbarVoService.isRealtime() ) {
 					$scope.$broadcast('navbarDirective.initialize.realtime.andReload', oNavbarVoService);
 				} else {
-					if (angular.isDefined($routeParams.application) && angular.isUndefined($routeParams.readablePeriod) && angular.isUndefined($routeParams.readablePeriod)) {
+					if ( angular.isDefined($routeParams.application) && angular.isUndefined($routeParams.readablePeriod) ) {
 						$scope.$broadcast('navbarDirective.initialize.andReload', oNavbarVoService);
 					} else {
 						$window.$routeParams = $routeParams;
@@ -79,7 +79,7 @@
 				} else {
 					url += oNavbarVoService.getReadablePeriod() + '/' + oNavbarVoService.getQueryEndDateTime();
 				}
-	            if (locationService.path() !== url) {
+	            if (locationService.path() !== url ) {
 	                if (locationService.path() === '/main') {
 	                	locationService.path(url).replace();
 	                } else {
@@ -157,6 +157,10 @@
 	            $window.htoScatter = {};
 	            $scope.hasScatter = false;
 	            $scope.sidebarLoading = true;
+
+				if ( oNavbarVoService.isRealtime() ) {
+					$scope.$broadcast("realtimeChartController.close");
+				}
 	            $scope.$broadcast('sidebarTitleDirective.empty.forMain');
 	            $scope.$broadcast('nodeInfoDetailsDirective.hide');
 	            $scope.$broadcast('linkInfoDetailsDirective.hide');
