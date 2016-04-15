@@ -351,8 +351,6 @@
                 <version>2.1.2.RELEASE</version>
             </dependency>
 
-
-
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>

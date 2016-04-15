@@ -239,7 +239,6 @@
             </exclusions>
         </dependency>
 
-
         <!--jackson jsonMapper. hbase need that for now -->
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
