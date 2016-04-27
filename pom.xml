@@ -330,25 +330,13 @@
             <dependency>
                 <groupId>org.apache.hbase</groupId>
                 <artifactId>hbase-client</artifactId>
-                <version>1.0.0-cdh5.4.0</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-beanutils</groupId>
-                        <artifactId>commons-beanutils-core</artifactId>
-                    </exclusion>
-                </exclusions>
+                <version>1.2.0-cdh5.7.0</version>
             </dependency>
 
             <dependency>
                 <groupId>com.sematext.hbasewd</groupId>
                 <artifactId>hbasewd</artifactId>
                 <version>0.1.0</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.data</groupId>
-                <artifactId>spring-data-hadoop-hbase</artifactId>
-                <version>2.1.2.RELEASE</version>
             </dependency>
 
             <dependency>
@@ -635,7 +623,7 @@
             <dependency>
                 <groupId>org.apache.zookeeper</groupId>
                 <artifactId>zookeeper</artifactId>
-                <version>3.4.5-cdh5.4.0</version>
+                <version>3.4.5-cdh5.7.0</version>
             </dependency>
 
             <!-- for zookeeper test -->
