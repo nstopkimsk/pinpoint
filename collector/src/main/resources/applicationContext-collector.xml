@@ -20,7 +20,9 @@
                         com.navercorp.pinpoint.collector.manage,
                         com.navercorp.pinpoint.collector.mapper,
                         com.navercorp.pinpoint.collector.util,
-                        com.navercorp.pinpoint.collector.config" />
+                        com.navercorp.pinpoint.collector.config,
+                        com.navercorp.pinpoint.common.server.util,
+                        com.navercorp.pinpoint.common.server.bo.serializer" />
 
     <bean id="propertyConfigurer"
           class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
@@ -71,6 +73,9 @@
     <bean id="clusterManager" class="com.navercorp.pinpoint.collector.manage.ClusterManager">
         <constructor-arg ref="collectorConfiguration"/>
         <constructor-arg ref="targetClusterPointRepository"/>
+    </bean>
+
+    <bean id="hBaseManager" class="com.navercorp.pinpoint.collector.manage.HBaseManager">
     </bean>
 
     <!-- DispatchHandler-related Beans -->

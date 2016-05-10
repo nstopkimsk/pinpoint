@@ -17,6 +17,7 @@
 package com.navercorp.pinpoint.common.server.bo;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.navercorp.pinpoint.common.buffer.AutomaticBuffer;
@@ -70,10 +71,9 @@ public class SpanBo implements Span {
     private String exceptionMessage;
     private String exceptionClass;
     
-    private boolean hasApplicationServiceType = false;
-    private short applicationServiceType;
+    private Short applicationServiceType;
 
-    
+    private String acceptorHost;
     private String remoteAddr; // optional
 
     private byte loggingTransactionInfo; //optional
@@ -108,7 +108,8 @@ public class SpanBo implements Span {
         this.apiId = span.getApiId();
 
         this.errCode = span.getErr();
-        
+
+        this.acceptorHost = span.getAcceptorHost();
         this.remoteAddr = span.getRemoteAddr();
         
         this.loggingTransactionInfo = span.getLoggingTransactionInfo();
@@ -116,7 +117,6 @@ public class SpanBo implements Span {
         // FIXME (2015.03) Legacy - applicationServiceType added in v1.1.0
         // applicationServiceType is not saved for older versions where applicationServiceType does not exist.
         if (span.isSetApplicationServiceType()) {
-            this.hasApplicationServiceType = true;
             this.applicationServiceType = span.getApplicationServiceType();
         }
 
@@ -129,7 +129,7 @@ public class SpanBo implements Span {
             this.exceptionMessage = exceptionInfo.getStringValue();
         }
 
-        setAnnotationList(span.getAnnotations());
+        this.annotationBoList = buildAnnotationList(span.getAnnotations());
     }
 
     public SpanBo(String traceAgentId, long traceAgentStartTime, long traceTransactionSequence, long startTime, int elapsed, long spanId) {
@@ -151,6 +151,11 @@ public class SpanBo implements Span {
 
     public int getVersion() {
         return version & 0xFF;
+    }
+
+
+    public byte getRawVersion() {
+        return version;
     }
 
     public void setVersion(int version) {
@@ -258,7 +263,7 @@ public class SpanBo implements Span {
         this.parentSpanId = parentSpanId;
     }
 
-    public int getFlag() {
+    public short getFlag() {
         return flag;
     }
 
@@ -286,15 +291,16 @@ public class SpanBo implements Span {
         return annotationBoList;
     }
 
-    public void setAnnotationList(List<TAnnotation> anoList) {
+    private List<AnnotationBo> buildAnnotationList(List<TAnnotation> anoList) {
         if (anoList == null) {
-            return;
+            return Collections.emptyList();
         }
-        List<AnnotationBo> boList = new ArrayList<AnnotationBo>(anoList.size());
+        List<AnnotationBo> boList = new ArrayList<>(anoList.size());
         for (TAnnotation ano : anoList) {
-            boList.add(new AnnotationBo(ano));
+            final AnnotationBo annotationBo = new AnnotationBo(ano);
+            boList.add(annotationBo);
         }
-        this.annotationBoList = boList;
+        return boList;
     }
 
     public void setAnnotationBoList(List<AnnotationBo> anoList) {
@@ -306,7 +312,7 @@ public class SpanBo implements Span {
 
     public void addSpanEvent(SpanEventBo spanEventBo) {
         if (spanEventBoList == null) {
-            spanEventBoList = new ArrayList<SpanEventBo>();
+            spanEventBoList = new ArrayList<>();
         }
         spanEventBoList.add(spanEventBo);
     }
@@ -329,6 +335,14 @@ public class SpanBo implements Span {
 
     public void setErrCode(int errCode) {
         this.errCode = errCode;
+    }
+
+    public String getAcceptorHost() {
+        return acceptorHost;
+    }
+
+    public void setAcceptorHost(String acceptorHost) {
+        this.acceptorHost = acceptorHost;
     }
 
     public String getRemoteAddr() {
@@ -363,6 +377,13 @@ public class SpanBo implements Span {
         return exceptionMessage;
     }
 
+    public void setExceptionInfo(int exceptionId, String exceptionMessage) {
+        this.hasException = true;
+        this.exceptionId = exceptionId;
+        this.exceptionMessage = exceptionMessage;
+    }
+
+
     public String getExceptionClass() {
         return exceptionClass;
     }
@@ -371,13 +392,16 @@ public class SpanBo implements Span {
         this.exceptionClass = exceptionClass;
     }
     
-    public void setApplicationServiceType(short applicationServiceType) {
-        this.hasApplicationServiceType = true;
+    public void setApplicationServiceType(Short applicationServiceType) {
         this.applicationServiceType  = applicationServiceType;
     }
-    
+
+    public boolean hasApplicationServiceType() {
+        return applicationServiceType != null;
+    }
+
     public short getApplicationServiceType() {
-        if (this.hasApplicationServiceType) {
+        if (hasApplicationServiceType()) {
             return this.applicationServiceType;
         } else {
             return this.serviceType;
@@ -388,11 +412,9 @@ public class SpanBo implements Span {
         return loggingTransactionInfo;
     }
 
-    public void setLoggingTransactionInfo(byte loggingTransactionInfo) {
-        this.loggingTransactionInfo = loggingTransactionInfo;
-    }
-
     // Variable encoding has been added in case of write io operation. The data size can be reduced by about 10%.
+    // for test
+    @Deprecated
     public byte[] writeValue() {
         /*
            It is difficult to calculate the size of buffer. It's not impossible.
@@ -402,9 +424,6 @@ public class SpanBo implements Span {
         final Buffer buffer = new AutomaticBuffer(256);
 
         buffer.put(version);
-
-        // buffer.put(mostTraceID);
-        // buffer.put(leastTraceID);
 
         buffer.putPrefixedString(agentId);
 
@@ -438,17 +457,24 @@ public class SpanBo implements Span {
         }
 
         buffer.put(flag);
-        
-        if (this.hasApplicationServiceType) {
+
+        if (hasApplicationServiceType()) {
             buffer.put(true);
             buffer.put(this.applicationServiceType);
         } else {
             buffer.put(false);
         }
-        
+
         buffer.put(loggingTransactionInfo);
 
+        buffer.putPrefixedString(acceptorHost);
+
         return buffer.getBuffer();
+    }
+
+
+    public void setLoggingTransactionInfo(byte loggingTransactionInfo) {
+        this.loggingTransactionInfo = loggingTransactionInfo;
     }
 
     public int readValue(byte[] bytes, int offset) {
@@ -488,8 +514,8 @@ public class SpanBo implements Span {
         // FIXME (2015.03) Legacy - applicationServiceType added in v1.1.0
         // Defaults to span's service type for older versions where applicationServiceType does not exist.
         if (buffer.limit() > 0) {
-            this.hasApplicationServiceType = buffer.readBoolean();
-            if (this.hasApplicationServiceType) {
+            final boolean hasApplicationServiceType = buffer.readBoolean();
+            if (hasApplicationServiceType) {
                 this.applicationServiceType = buffer.readShort();
             }
         }
@@ -498,8 +524,13 @@ public class SpanBo implements Span {
             this.loggingTransactionInfo = buffer.readByte();
         }
 
+        if (buffer.limit() > 0) {
+            this.acceptorHost = buffer.readPrefixedString();
+        }
+
         return buffer.getOffset();
     }
+
 
     @Override
     public String toString() {
@@ -518,6 +549,7 @@ public class SpanBo implements Span {
         sb.append(", elapsed=").append(elapsed);
         sb.append(", rpc='").append(rpc).append('\'');
         sb.append(", serviceType=").append(serviceType);
+        sb.append(", acceptorHost=").append(acceptorHost);
         sb.append(", endPoint='").append(endPoint).append('\'');
         sb.append(", apiId=").append(apiId);
         sb.append(", annotationBoList=").append(annotationBoList);
@@ -529,10 +561,7 @@ public class SpanBo implements Span {
         sb.append(", exceptionId=").append(exceptionId);
         sb.append(", exceptionMessage='").append(exceptionMessage).append('\'');
         sb.append(", remoteAddr='").append(remoteAddr).append('\'');
-        sb.append(", hasApplicationServiceType=").append(hasApplicationServiceType);
-        if (hasApplicationServiceType) {
-            sb.append(", applicationServiceType=").append(applicationServiceType);
-        }
+        sb.append(", applicationServiceType=").append(applicationServiceType);
         sb.append('}');
         return sb.toString();
     }
