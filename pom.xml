@@ -64,6 +64,7 @@
         <encoding>UTF-8</encoding>
         <jdk.version>1.6</jdk.version>
         <jdk.home>${env.JAVA_6_HOME}</jdk.home>
+        <test.jdk.home>${jdk.home}</test.jdk.home>
         <slf4j.version>1.7.21</slf4j.version>
         <metrics.version>3.1.2</metrics.version>
         <spring.version>4.1.9.RELEASE</spring.version>
@@ -667,6 +668,12 @@
                 <version>2.5.3</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.activemq</groupId>
+                <artifactId>activemq-client</artifactId>
+                <version>5.13.2</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -752,14 +759,14 @@
                         <exclude>**/*$*</exclude>
                     </excludes>
                     <argLine>-Dfile.encoding=${encoding}</argLine>
-                    <jvm>${jdk.home}/bin/java</jvm>
+                    <jvm>${test.jdk.home}/bin/java</jvm>
                     <forkMode>once</forkMode>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
                 <artifactId>maven-clover2-plugin</artifactId>
-                <version>3.1.6</version>
+                <version>4.0.6</version>
                 <configuration>
                     <encoding>${encoding}</encoding>
                     <jdk>${jdk.version}</jdk>
@@ -845,13 +852,6 @@
                 <groupId>com.cj.jshintmojo</groupId>
                 <artifactId>jshint-maven-plugin</artifactId>
                 <version>1.6.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>lint</goal>
-                        </goals>
-                    </execution>
-                </executions>
                 <configuration>
                     <options>sub, boss, newcap, loopfunc</options>
                     <globals></globals>
@@ -916,7 +916,7 @@
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
                 <artifactId>maven-clover2-plugin</artifactId>
-                <version>3.1.6</version>
+                <version>4.0.6</version>
                 <configuration>
                     <includesTestSourceRoots>true</includesTestSourceRoots>
                     <licenseLocation>clover.license</licenseLocation>

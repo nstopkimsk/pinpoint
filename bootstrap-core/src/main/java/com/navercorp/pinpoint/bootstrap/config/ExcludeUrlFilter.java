@@ -16,62 +16,21 @@
 
 package com.navercorp.pinpoint.bootstrap.config;
 
-import com.navercorp.pinpoint.bootstrap.util.AntPathMatcher;
-import com.navercorp.pinpoint.bootstrap.util.PathMatcher;
-import com.navercorp.pinpoint.bootstrap.util.EqualsPathMatcher;
-import com.navercorp.pinpoint.bootstrap.util.StringUtils;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 /**
  * @author emeroad
  */
-public class ExcludeUrlFilter implements Filter<String> {
+public class ExcludeUrlFilter extends ExcludePathFilter {
 
-    private final List<PathMatcher> excludeMatcherList;
 
-    public ExcludeUrlFilter(String excludeFormat) {
-        this(excludeFormat, ",");
-    }
 
-    public ExcludeUrlFilter(String excludeFormat, String separator) {
-        if (StringUtils.isEmpty(excludeFormat)) {
-            this.excludeMatcherList = Collections.emptyList();
-            return;
-        }
-        final List<String> splitList = StringUtils.splitAndTrim(excludeFormat, separator);
-        final List<PathMatcher> buildList = new ArrayList<PathMatcher>(splitList.size());
-        for (String path : splitList) {
-            final PathMatcher pathMatcher = createPathMatcher(path);
-            buildList.add(pathMatcher);
-        }
-
-        this.excludeMatcherList = buildList;
-    }
-
-    protected PathMatcher createPathMatcher(String pattern) {
-        if (AntPathMatcher.isAntStylePattern(pattern)) {
-            return new AntPathMatcher(pattern);
-        }
-        return new EqualsPathMatcher(pattern);
-    }
-
-    @Override
-    public boolean filter(String requestURI) {
-        for (PathMatcher excludePathMatcher : this.excludeMatcherList) {
-            if (excludePathMatcher.isMatched(requestURI)) {
-                return FILTERED;
-            }
-        }
-        return false;
+    public ExcludeUrlFilter(String excludePathFormatString) {
+        super(excludePathFormatString);
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("ExcludeUrlFilter{");
-        sb.append("excludeMatcherList=").append(excludeMatcherList);
+        sb.append("excludeUrlMatchers=").append(excludePathMatchers);
         sb.append('}');
         return sb.toString();
     }
